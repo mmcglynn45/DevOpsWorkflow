@@ -1,22 +1,22 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "adminUsername": {
-            "type": "string",
-            "metadata": {
-                "description": "Username for the Virtual Machine."
-            },
-            "defaultValue": "Matt"
-        },
-        "adminPassword": {
-            "type": "securestring",
-            "defaultValue": "User@1234567",
-            "metadata": {
-                "description": "Password for the Virtual Machine."
-            }
-        },
-        "ubuntuOSVersion": {
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the Virtual Machine."
+      },
+      "defaultValue": "Matt"
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "defaultValue": "User@1234567",
+      "metadata": {
+        "description": "Password for the Virtual Machine."
+      }
+    },
+    "ubuntuOSVersion": {
       "type": "string",
       "defaultValue": "14.04.2-LTS",
       "allowedValues": [
@@ -28,39 +28,41 @@
         "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version. Allowed values:14.04.2-LTS, 14.04.3-LTS, 15.10."
       }
     }
-    },
-    "variables": {
-        "dnsNameForPublicIP": "[concat('dns', resourceGroup().name)]",
-        "dnsserver": "192.168.100.2",
-        "location": "[resourceGroup().location]",
-        "imagePublisher": "Canonical",
-        "imageOffer": "UbuntuServer",
-        "OSDiskName": "osdisk",
-        "nicName": "myVnic",
-        "addressPrefix": "10.0.0.0/24",
-        "subnetName": "mySubnet",
-        "subnetPrefix": "10.0.0.0/24",
-        "storageAccountName": "[concat('sa', resourceGroup().name)]",
-        "storageAccountType": "Standard_LRS",
-        "publicIPAddressName": "myPublicIP",
-        "publicIPAddressType": "Dynamic",
-        "vmStorageAccountContainerName": "vhds",
-        "vmName": "[concat('vm', resourceGroup().name)]",
-        "vmSize": "Standard_A1",
-        "virtualNetworkName": "myVnet",
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-        "assetLocation": "https://github.com/Azure/azure-quickstart-templates/blob/master/jenkins-on-ubuntu",
-        "scriptFileName": "jenkMstrInstall.sh",
-        "scriptFile": "[concat(variables('assetLocation'),'/',variables('scriptFileName'))]",
-        "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-        "networkSecurityGroupName": "mySG",
-        "apiVersion": {
-            "resources": { "deployments": "2015-01-01" },
-            "network": "2015-05-01-preview",
-            "storage": "2015-05-01-preview",
-            "compute": "2015-06-15"
-        }
-    },
+  },
+  "variables": {
+    "dnsNameForPublicIP": "[concat('dns', resourceGroup().name)]",
+    "dnsserver": "192.168.100.2",
+    "location": "[resourceGroup().location]",
+    "imagePublisher": "Canonical",
+    "imageOffer": "UbuntuServer",
+    "OSDiskName": "osdisk",
+    "nicName": "myVnic",
+    "addressPrefix": "10.0.0.0/24",
+    "subnetName": "mySubnet",
+    "subnetPrefix": "10.0.0.0/24",
+    "storageAccountName": "[concat('sa', resourceGroup().name)]",
+    "storageAccountType": "Standard_LRS",
+    "publicIPAddressName": "myPublicIP",
+    "publicIPAddressType": "Dynamic",
+    "vmStorageAccountContainerName": "vhds",
+    "vmName": "[concat('vm', resourceGroup().name)]",
+    "vmSize": "Standard_A1",
+    "virtualNetworkName": "myVnet",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "assetLocation": "https://raw.githubusercontent.com/mmcglynn45/DevOpsWorkflow/master/DevOps",
+    "scriptFileName": "jenkMstrInstall.sh",
+    "scriptFile": "[concat(variables('assetLocation'),'/',variables('scriptFileName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "networkSecurityGroupName": "mySG",
+    "apiVersion": {
+      "resources": {
+        "deployments": "2015-01-01"
+      },
+      "network": "2015-05-01-preview",
+      "storage": "2015-05-01-preview",
+      "compute": "2015-06-15"
+    }
+  },
   "resources": [
     {
       "apiVersion": "[variables('apiVersion').network]",
@@ -146,11 +148,9 @@
               }
             }
           }
-        ],
-        "dhcpOptions": {
-            "dnsServers":  [ "[variables('dnsserver')]" ]
-        }
+        ]
       }
+
     },
     {
       "apiVersion": "[variables('apiVersion').network]",
@@ -176,83 +176,82 @@
             }
           }
         ],
-       "networkSecurityGroup": { 
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]" 
-        } 
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+        }
+      }
+    },
 
+    {
+      "apiVersion": "[variables('apiVersion').compute]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[parameters('ubuntuOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob, variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob]"
+          }
+        }
       }
     },
     {
-        "apiVersion": "[variables('apiVersion').compute]",
-        "type": "Microsoft.Compute/virtualMachines",
-        "name": "[variables('vmName')]",
-        "location": "[variables('location')]",
-        "dependsOn": [
-            "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-            "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
-        ],
-        "properties": {
-            "hardwareProfile": {
-                "vmSize": "[variables('vmSize')]"
-            },
-            "osProfile": {
-                "computerName": "[variables('vmName')]",
-                "adminUsername": "[parameters('adminUsername')]",
-                "adminPassword": "[parameters('adminPassword')]"
-            },
-            "storageProfile": {
-                "imageReference": {
-                    "publisher": "[variables('imagePublisher')]",
-                    "offer": "[variables('imageOffer')]",
-                    "sku": "[parameters('ubuntuOSVersion')]",
-                    "version": "latest"
-                },
-                "osDisk": {
-                    "name": "osdisk",
-                    "vhd": {
-                        "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob, variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
-                    },
-                    "caching": "ReadWrite",
-                    "createOption": "FromImage"
-                }
-            },
-            "networkProfile": {
-                "networkInterfaces": [
-                    {
-                        "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
-                    }
-                ]
-            },
-            "diagnosticsProfile": {
-                "bootDiagnostics": {
-                    "enabled": "true",
-                    "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob]"
-                }
-            }
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'),'/LinuxCustomScriptExtension')]",
+      "apiVersion": "[variables('apiVersion').compute]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.4",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[variables('scriptFile')]"
+          ],
+          "commandToExecute": "sh jenkMstrInstall.sh"
         }
-    },
-    {
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "name": "[concat(variables('vmName'),'/LinuxCustomScriptExtension')]",
-        "apiVersion": "[variables('apiVersion').compute]",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
-        ],
-        "properties": {
-            "publisher": "Microsoft.OSTCExtensions",
-            "type": "CustomScriptForLinux",
-            "typeHandlerVersion": "1.4",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-                "fileUris": [ "[variables('scriptFile')]" ],
-                "commandToExecute": "sh jenkMstrInstall.sh",
-                "enableInternalDNSCheck": "false"
-            }
-        }
+      }
     }
   ],
-
-  "outputs": {
-  }
+  "outputs": {}
 }

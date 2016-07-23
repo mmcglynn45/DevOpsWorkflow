@@ -146,10 +146,7 @@
               }
             }
           }
-        ],
-        "dhcpOptions": {
-            "dnsServers":  [ "[variables('dnsserver')]" ]
-        }
+        ]
       }
     },
     {
@@ -246,8 +243,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
                 "fileUris": [ "[variables('scriptFile')]" ],
-                "commandToExecute": "sh jenkMstrInstall.sh",
-                "enableInternalDNSCheck": "false"
+                "commandToExecute": "sh jenkMstrInstall.sh"
             }
         }
     }
