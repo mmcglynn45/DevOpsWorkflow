@@ -242,7 +242,8 @@
         "properties": {
             "publisher": "Microsoft.OSTCExtensions",
             "type": "CustomScriptForLinux",
-            "typeHandlerVersion": "latest",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
             "settings": {
                 "fileUris": [ "[variables('scriptFile')]" ],
                 "commandToExecute": "sh jenkMstrInstall.sh",
