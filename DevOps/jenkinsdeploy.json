@@ -17,7 +17,7 @@
         },
         "ubuntuOSVersion": {
       "type": "string",
-      "defaultValue": "15.10",
+      "defaultValue": "14.04.2-LTS",
       "allowedValues": [
         "14.04.2-LTS",
         "14.04.3-LTS",
@@ -161,9 +161,6 @@
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "properties": {
-        "dnsSettings": {
-           "dnsServers":  [ "[variables('dnsserver')]" ]
-        },
         "ipConfigurations": [
           {
             "name": "ipconfig1",
