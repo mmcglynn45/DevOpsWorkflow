@@ -31,6 +31,7 @@
   },
   "variables": {
     "dnsNameForPublicIP": "[concat('dns', resourceGroup().name)]",
+    "gitDNSNameForPublicIP": "[concat('git', resourceGroup().name)]",
     "dnsserver": "192.168.100.2",
     "location": "[resourceGroup().location]",
     "imagePublisher": "Canonical",
@@ -52,6 +53,9 @@
     "assetLocation": "https://raw.githubusercontent.com/mmcglynn45/DevOpsWorkflow/master/DevOps",
     "scriptFileName": "jenkMstrInstall.sh",
     "scriptFile": "[concat(variables('assetLocation'),'/',variables('scriptFileName'))]",
+    "gitAssetLocation": "https://raw.githubusercontent.com/mmcglynn45/DevOpsWorkflow/master/DevOps",
+    "gitScriptFileName": "gitlabInstall.sh",
+    "gitScriptFile": "[concat(variables('assetLocation'),'/',variables('scriptFileName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
     "networkSecurityGroupName": "mySG",
     "apiVersion": {
@@ -126,6 +130,18 @@
     },
     {
       "apiVersion": "[variables('apiVersion').network]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('publicIPAddressName'),'2')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('gitDNSNameForPublicIP')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('apiVersion').network]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[variables('location')]",
@@ -181,6 +197,35 @@
         }
       }
     },
+        {
+      "apiVersion": "[variables('apiVersion').network]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'),'2')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'),'2')]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName','2'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+        }
+      }
+    },
 
     {
       "apiVersion": "[variables('apiVersion').compute]",
@@ -222,12 +267,49 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
             }
           ]
+        }
+      }
+    },
+        {
+      "apiVersion": "[variables('apiVersion').compute]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'),'gitLab')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'2')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
         },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": "true",
-            "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob]"
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[parameters('ubuntuOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob, variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
           }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'2'))]"
+            }
+          ]
         }
       }
     },
@@ -251,6 +333,25 @@
           "commandToExecute": "sh jenkMstrInstall.sh"
         }
       }
+    },
+     {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name": "[concat(variables('vmName'),'gitLab','/LinuxCustomScriptExtension')]",
+        "apiVersion": "[variables('apiVersion').compute]",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'),'gitLab')]"
+        ],
+        "properties": {
+            "publisher": "Microsoft.OSTCExtensions",
+            "type": "CustomScriptForLinux",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+                "fileUris": [ "[variables('gitScriptFile')]" ],
+                "commandToExecute": "[concat('sh gitlabInstall.sh ',variables('gitDNSNameForPublicIP'),'.westus.cloudapp.azure.com')]"
+            }
+        }
     }
   ],
   "outputs": {}
