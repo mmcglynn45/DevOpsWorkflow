@@ -55,7 +55,7 @@
     "scriptFile": "[concat(variables('assetLocation'),'/',variables('scriptFileName'))]",
     "gitAssetLocation": "https://raw.githubusercontent.com/mmcglynn45/DevOpsWorkflow/master/DevOps",
     "gitScriptFileName": "gitlabInstall.sh",
-    "gitScriptFile": "[concat(variables('assetLocation'),'/',variables('scriptFileName'))]",
+    "gitScriptFile": "[concat(variables('gitAssetLocation'),'/',variables('gitScriptFileName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
     "networkSecurityGroupName": "mySG",
     "apiVersion": {
@@ -213,7 +213,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName','2'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('publicIPAddressName'),'2'))]"
               },
               "subnet": {
                 "id": "[variables('subnetRef')]"
@@ -298,7 +298,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob, variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+              "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).primaryEndpoints.blob, variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'2.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
