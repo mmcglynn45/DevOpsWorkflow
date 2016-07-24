@@ -11,8 +11,8 @@ curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/scrip
 
 sudo apt-get install gitlab-ce
 
-sed '1,/external_url/d' /etc/gitlab/gitlab.rb -i
-echo "external_url http://$dns/" >> /etc/gitlab/gitlab.rb
+sed '2,/external_url/d' /etc/gitlab/gitlab.rb -i
+echo "external_url 'http://$dns/''" >> /etc/gitlab/gitlab.rb
 
 
 sudo gitlab-ctl reconfigure
